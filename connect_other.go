@@ -29,7 +29,7 @@ func (sc *Server) startListen() error {
 
 	listen, err := net.Listen("unix", base+sc.name+sock)
 
-	if sc.unMask == true {
+	if sc.unMask >= 0 {
 		syscall.Umask(oldUmask)
 	}
 
