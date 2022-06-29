@@ -5,16 +5,15 @@ on:
 jobs:
   build_test:
     name: Build Test
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ macos-latest, windows-latest, ubuntu-latest ]
+    runs-on: ${{ matrix.os }}
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v2
-      - name: Generate build files
-        uses: thatisuday/go-cross-build@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v3
         with:
-          platforms: 'linux/amd64, windows/amd64'
-          package: 'ipc'
-          name: 'ipc'
-          compress: 'true'
-          dest: 'dist'
-      - run: find dist
+          go-version: '1.18.0' # The Go version to download (if necessary) and use.
+      - run: go version
+      - run: go test
