@@ -1,3 +1,4 @@
+//go:build linux || darwin
 // +build linux darwin
 
 package ipc
@@ -12,9 +13,9 @@ import (
 )
 
 // Server create a unix socket and start listening connections - for unix and linux
-func (sc *Server) run() error {
+func (sc *Server) startListen() error {
 
-	base := "/tmp/"
+	base := "/var/run/"
 	sock := ".sock"
 
 	if err := os.RemoveAll(base + sc.name + sock); err != nil {
@@ -22,8 +23,8 @@ func (sc *Server) run() error {
 	}
 
 	var oldUmask int
-	if sc.unMask == true {
-		oldUmask = syscall.Umask(0)
+	if sc.unMask >= 0 {
+		oldUmask = syscall.Umask(sc.unMask)
 	}
 
 	listen, err := net.Listen("unix", base+sc.name+sock)
@@ -43,11 +44,6 @@ func (sc *Server) run() error {
 	sc.connChannel = make(chan bool)
 
 	go sc.acceptLoop()
-
-	err = sc.connectionTimer()
-	if err != nil {
-		return err
-	}
 
 	return nil
 
@@ -74,7 +70,7 @@ func (cc *Client) dial() error {
 
 			if strings.Contains(err.Error(), "connect: no such file or directory") == true {
 
-			} else if strings.Contains(err.Error(), "connect: connection refused") == true {
+			} else if strings.Contains(err.Error(), "connect: Connection refused") == true {
 
 			} else {
 				cc.recieved <- &Message{err: err, MsgType: -2}
