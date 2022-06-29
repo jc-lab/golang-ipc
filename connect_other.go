@@ -40,8 +40,6 @@ func (sc *Server) startListen() error {
 	sc.listen = listen
 
 	sc.status = Listening
-	sc.recieved <- &Message{Status: sc.status.String(), MsgType: -1}
-	sc.connChannel = make(chan bool)
 
 	go sc.acceptLoop()
 

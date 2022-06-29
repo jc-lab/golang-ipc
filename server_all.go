@@ -67,7 +67,7 @@ func startServer(sc *Server) {
 	if err != nil {
 		sc.recieved <- &Message{err: err, MsgType: -2}
 	} else {
-		sc.recieved <- &Message{Status: sc.status.String(), MsgType: -2}
+		sc.recieved <- &Message{Status: sc.status.String(), MsgType: -1}
 	}
 }
 
