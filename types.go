@@ -80,6 +80,7 @@ const (
 
 // ServerConfig - used to pass configuation overrides to ServerStart()
 type ServerConfig struct {
+	SocketDirectory    string
 	Timeout            time.Duration
 	MaxMsgSize         int
 	Encryption         bool

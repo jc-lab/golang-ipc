@@ -54,6 +54,7 @@ func StartServer(ipcName string, config *ServerConfig) (*Server, error) {
 			sc.unMask = config.Unmask
 		}
 
+		sc.socketDirectory = config.SocketDirectory
 		sc.securityDescriptor = config.SecurityDescriptor
 	}
 
