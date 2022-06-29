@@ -126,7 +126,7 @@ func (cc *Client) readData(buff []byte) bool {
 
 	_, err := cc.conn.Read(buff)
 	if err != nil {
-		if strings.Contains(err.Error(), "EOF") { // the connection has been closed by the client.
+		if strings.Contains(err.Error(), "EOF") { // the Connection has been closed by the client.
 			cc.conn.Close()
 
 			if cc.status != Closing || cc.status == Closed {
@@ -138,7 +138,7 @@ func (cc *Client) readData(buff []byte) bool {
 		if cc.status == Closing {
 			cc.status = Closed
 			cc.recieved <- &Message{Status: cc.status.String(), MsgType: -1}
-			cc.recieved <- &Message{err: errors.New("Client has closed the connection"), MsgType: -2}
+			cc.recieved <- &Message{err: errors.New("Client has closed the Connection"), MsgType: -2}
 			return false
 		}
 
@@ -194,7 +194,7 @@ func (cc *Client) Read() (*Message, error) {
 
 }
 
-// Write - writes a non multipart message to the ipc connection.
+// Write - writes a non multipart message to the ipc Connection.
 // msgType - denotes the type of data being sent. 0 is a reserved type for internal messages and errors.
 //
 func (cc *Client) Write(msgType int, message []byte) error {
@@ -256,26 +256,26 @@ func (cc *Client) write() {
 	}
 }
 
-// getStatus - get the current status of the connection
+// getStatus - get the current status of the Connection
 func (cc *Client) getStatus() Status {
 
 	return cc.status
 
 }
 
-// StatusCode - returns the current connection status
+// StatusCode - returns the current Connection status
 func (cc *Client) StatusCode() Status {
 	return cc.status
 }
 
-// Status - returns the current connection status as a string
+// Status - returns the current Connection status as a string
 func (cc *Client) Status() string {
 
 	return cc.status.String()
 
 }
 
-// Close - closes the connection
+// Close - closes the Connection
 func (cc *Client) Close() {
 
 	cc.status = Closing

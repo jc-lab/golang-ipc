@@ -12,7 +12,7 @@ import (
 	"net"
 )
 
-func (sc *Server) keyExchange() ([32]byte, error) {
+func (sc *Server) keyExchange(connection *Connection) ([32]byte, error) {
 
 	var shared [32]byte
 
@@ -22,13 +22,13 @@ func (sc *Server) keyExchange() ([32]byte, error) {
 	}
 
 	// send servers public key
-	err = sendPublic(sc.conn, pub)
+	err = sendPublic(connection.conn, pub)
 	if err != nil {
 		return shared, err
 	}
 
 	// recieve clients public key
-	pubRecvd, err := recvPublic(sc.conn)
+	pubRecvd, err := recvPublic(connection.conn)
 	if err != nil {
 		return shared, err
 	}

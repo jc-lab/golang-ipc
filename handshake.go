@@ -9,21 +9,21 @@ import (
 // 1st message sent from the server
 // byte 0 = protocal version no.
 // byte 1 = whether encryption is to be used - 0 no , 1 = encryption
-func (sc *Server) handshake() error {
+func (sc *Server) handshake(connection *Connection) error {
 
-	err := sc.one()
+	err := sc.one(connection)
 	if err != nil {
 		return err
 	}
 
 	if sc.encryption == true {
-		err = sc.startEncryption()
+		err = sc.startEncryption(connection)
 		if err != nil {
 			return err
 		}
 	}
 
-	err = sc.msgLength()
+	err = sc.msgLength(connection)
 	if err != nil {
 		return err
 	}
@@ -32,7 +32,7 @@ func (sc *Server) handshake() error {
 
 }
 
-func (sc *Server) one() error {
+func (sc *Server) one(connection *Connection) error {
 
 	buff := make([]byte, 2)
 
@@ -44,13 +44,13 @@ func (sc *Server) one() error {
 		buff[1] = byte(0)
 	}
 
-	_, err := sc.conn.Write(buff)
+	_, err := connection.conn.Write(buff)
 	if err != nil {
 		return errors.New("unable to send handshake ")
 	}
 
 	recv := make([]byte, 1)
-	_, err = sc.conn.Read(recv)
+	_, err = connection.conn.Read(recv)
 	if err != nil {
 		return errors.New("failed to recieve handshake reply")
 	}
@@ -71,9 +71,9 @@ func (sc *Server) one() error {
 
 }
 
-func (sc *Server) startEncryption() error {
+func (sc *Server) startEncryption(connection *Connection) error {
 
-	shared, err := sc.keyExchange()
+	shared, err := sc.keyExchange(connection)
 	if err != nil {
 		return err
 	}
@@ -83,7 +83,7 @@ func (sc *Server) startEncryption() error {
 		return err
 	}
 
-	sc.enc = &encryption{
+	connection.enc = &encryption{
 		keyExchange: "ecdsa",
 		encryption:  "AES-GCM-256",
 		cipher:      gcm,
@@ -93,7 +93,7 @@ func (sc *Server) startEncryption() error {
 
 }
 
-func (sc *Server) msgLength() error {
+func (sc *Server) msgLength(connection *Connection) error {
 
 	toSend := make([]byte, 4)
 
@@ -101,7 +101,7 @@ func (sc *Server) msgLength() error {
 	binary.BigEndian.PutUint32(buff, uint32(sc.maxMsgSize))
 
 	if sc.encryption == true {
-		maxMsg, err := encrypt(*sc.enc.cipher, buff)
+		maxMsg, err := encrypt(*connection.enc.cipher, buff)
 		if err != nil {
 			return err
 		}
@@ -115,14 +115,14 @@ func (sc *Server) msgLength() error {
 		toSend = append(toSend, buff...)
 	}
 
-	_, err := sc.conn.Write(toSend)
+	_, err := connection.conn.Write(toSend)
 	if err != nil {
 		return errors.New("unable to send max message length ")
 	}
 
 	reply := make([]byte, 1)
 
-	_, err = sc.conn.Read(reply)
+	_, err = connection.conn.Read(reply)
 	if err != nil {
 		return errors.New("did not recieve message length reply")
 	}

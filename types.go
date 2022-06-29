@@ -6,23 +6,30 @@ import (
 	"time"
 )
 
-// Server - holds the details of the server connection & config.
+// Server - holds the details of the server Connection & config.
 type Server struct {
-	name        string
-	listen      net.Listener
-	conn        net.Conn
-	status      Status
-	recieved    chan (*Message)
-	connChannel chan bool
-	toWrite     chan (*Message)
-	timeout     time.Duration
-	encryption  bool
-	maxMsgSize  int
-	enc         *encryption
-	unMask      bool
+	socketDirectory    string
+	name               string
+	listen             net.Listener
+	status             Status
+	recieved           chan (*Message)
+	timeout            time.Duration
+	encryption         bool
+	maxMsgSize         int
+	unMask             int
+	securityDescriptor string
 }
 
-// Client - holds the details of the client connection and config.
+// Connection
+type Connection struct {
+	conn       net.Conn
+	maxMsgSize int
+	status     Status
+	enc        *encryption
+	toWrite    chan (*Message)
+}
+
+// Client - holds the details of the client Connection and config.
 type Client struct {
 	Name          string
 	conn          net.Conn
@@ -39,13 +46,14 @@ type Client struct {
 
 // Message - contains the  recieved message
 type Message struct {
-	err     error  // details of any error
-	MsgType int    // type of message sent - 0 is reserved
-	Data    []byte // message data recieved
-	Status  string
+	Connection *Connection
+	err        error  // details of any error
+	MsgType    int    // type of message sent - 0 is reserved
+	Data       []byte // message data recieved
+	Status     string
 }
 
-// Status - Status of the connection
+// Status - Status of the Connection
 type Status int
 
 const (
@@ -72,10 +80,12 @@ const (
 
 // ServerConfig - used to pass configuation overrides to ServerStart()
 type ServerConfig struct {
-	Timeout           time.Duration
-	MaxMsgSize        int
-	Encryption        bool
-	UnmaskPermissions bool
+	Timeout            time.Duration
+	MaxMsgSize         int
+	Encryption         bool
+	UseUnmask          bool
+	Unmask             int
+	SecurityDescriptor string
 }
 
 // ClientConfig - used to pass configuation overrides to ClientStart()

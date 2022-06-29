@@ -1,3 +1,6 @@
+//go:build windows
+// +build windows
+
 package ipc
 
 import (
@@ -10,14 +13,23 @@ import (
 
 // Server function
 // Create the named pipe (if it doesn't already exist) and start listening for a client to connect.
-// when a client connects and connection is accepted the read function is called on a go routine.
-func (sc *Server) run() error {
+// when a client connects and Connection is accepted the read function is called on a go routine.
+func (sc *Server) startListen() error {
+	base := sc.socketDirectory
+	if base == "" {
+		base = `\\.\pipe\`
+	} else if !strings.HasSuffix(base, `\`) {
+		base += `\`
+	}
 
-	var pipeBase = `\\.\pipe\`
+	pipeConfig := &winio.PipeConfig{}
 
-	listen, err := winio.ListenPipe(pipeBase+sc.name, nil)
+	if sc.securityDescriptor != "" {
+		pipeConfig.SecurityDescriptor = sc.securityDescriptor
+	}
+
+	listen, err := winio.ListenPipe(base+sc.name, pipeConfig)
 	if err != nil {
-
 		return err
 	}
 
@@ -25,23 +37,14 @@ func (sc *Server) run() error {
 
 	sc.status = Listening
 
-	sc.connChannel = make(chan bool)
-
 	go sc.acceptLoop()
 
-	err2 := sc.connectionTimer()
-	if err2 != nil {
-		return err2
-	}
-
 	return nil
-
 }
 
 // Client function
 // dial - attempts to connect to a named pipe created by the server
 func (cc *Client) dial() error {
-
 	var pipeBase = `\\.\pipe\`
 
 	startTime := time.Now()
@@ -55,15 +58,11 @@ func (cc *Client) dial() error {
 		}
 		pn, err := winio.DialPipe(pipeBase+cc.Name, nil)
 		if err != nil {
-
-			if strings.Contains(err.Error(), "The system cannot find the file specified.") == true {
-
-			} else {
+			if !strings.Contains(err.Error(), "The system cannot find the file specified.") {
 				return err
 			}
 
 		} else {
-
 			cc.conn = pn
 
 			err = cc.handshake()
@@ -74,6 +73,5 @@ func (cc *Client) dial() error {
 		}
 
 		time.Sleep(cc.retryTimer * time.Second)
-
 	}
 }
