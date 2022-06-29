@@ -15,7 +15,12 @@ import (
 // Create the named pipe (if it doesn't already exist) and start listening for a client to connect.
 // when a client connects and Connection is accepted the read function is called on a go routine.
 func (sc *Server) startListen() error {
-	var pipeBase = `\\.\pipe\`
+	base := sc.socketDirectory
+	if base == "" {
+		base = `\\.\pipe\`
+	} else if !strings.HasSuffix(base, `\`) {
+		base += `\`
+	}
 
 	pipeConfig := &winio.PipeConfig{}
 
@@ -23,7 +28,7 @@ func (sc *Server) startListen() error {
 		pipeConfig.SecurityDescriptor = sc.securityDescriptor
 	}
 
-	listen, err := winio.ListenPipe(pipeBase+sc.name, pipeConfig)
+	listen, err := winio.ListenPipe(base+sc.name, pipeConfig)
 	if err != nil {
 		return err
 	}

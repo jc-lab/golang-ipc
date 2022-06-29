@@ -14,11 +14,16 @@ import (
 
 // Server create a unix socket and start listening connections - for unix and linux
 func (sc *Server) startListen() error {
+	base := sc.socketDirectory
+	if base == "" {
+		base = "/tmp/"
+	} else if !strings.HasSuffix(base, "/") {
+		base += "/"
+	}
 
-	base := "/var/run/"
-	sock := ".sock"
+	sockPath := base + sc.name + ".sock"
 
-	if err := os.RemoveAll(base + sc.name + sock); err != nil {
+	if err := os.RemoveAll(sockPath); err != nil {
 		return err
 	}
 
@@ -27,7 +32,7 @@ func (sc *Server) startListen() error {
 		oldUmask = syscall.Umask(sc.unMask)
 	}
 
-	listen, err := net.Listen("unix", base+sc.name+sock)
+	listen, err := net.Listen("unix", sockPath)
 
 	if sc.unMask >= 0 {
 		syscall.Umask(oldUmask)
